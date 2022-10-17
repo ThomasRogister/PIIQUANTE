@@ -3,6 +3,7 @@ const express = require('express');
 const stuffCrtl = require('../controllers/stuff');
 const auth = require('auth');
 const multer = require('../middleware/multer-config')
+
 const router = express.Router();
 
 

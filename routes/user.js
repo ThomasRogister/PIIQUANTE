@@ -1,7 +1,7 @@
 const express = require('express');
-const router = express.Router();
 const userCrtl = require('../controllers/user');
 
+const router = express.Router();
 
 // hachage du mot + ajout user à la BD
 router.post('/signUp', userCrtl.signUp);
