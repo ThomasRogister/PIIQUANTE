@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/ThomasRogister/Piiquante/issues"
   },
-  "homepage": "https://github.com/ThomasRogister/Piiquante#readme"
+  "homepage": "https://github.com/ThomasRogister/Piiquante#readme",
+  "dependencies": {
+    "fs": "^0.0.1-security"
+  }
 }

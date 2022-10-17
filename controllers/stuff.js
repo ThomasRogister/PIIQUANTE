@@ -1,6 +1,6 @@
 const thing = require('../models/thing');
 const sauce = require('../models/thing');
-cont fs = require('fs');
+const fs = require('fs');
 
 
 
@@ -35,23 +35,18 @@ exports.createSauce = (req, res, next) => {
 
 //modification d'une sauce existante
 exports.modifySauce = (req, res, next) => {
-    const sauceObject = req.file ? {
-        ...JSON.parse(req.body.thing),
-        imageUrl: `${req.protocol}://${req.get('host')}/image/${req.file.filename}`
-    } : { ...req.body };
-
+    const sauceObject = JSON.parse(req.body.thing);
+    delete sauceObject._id;
     delete sauceObject._userId;
-    sauce.findOne({ _id: req.params.id })
-        .then((thing) => {
-            if (thing.userId != req.auth.userId) {
-                res.status(401).json({ 'non autorisé'});
-            } else {
-                sauce.updatOne({ _id: req.params.id }, { ...sauceObject, _id: req.params.id })
-                    .then(() => { res.status(200).json({ message: 'Sauce modifiée!' }) })
-                    .catch(error => res.status(401).json({ error }));
-            }
-        })
-        .catch(error => res.status(400).json({ error }))
+    const thing = new sauce({
+        ...sauceObject,
+        userId: req.auth.userId,
+        imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
+    });
+
+    thing.save()
+        .then(() => { res.status(201).json({ message: 'Objet enregistré !' }) })
+        .catch(error => { res.status(400).json({ error }) })
 };
 
 //supression d'une sauce
