@@ -1,14 +1,14 @@
 
 const express = require('express');
 const stuffCrtl = require('../controllers/stuff');
-const auth = require('auth');
+const auth = require('../middleware/auth');
 const multer = require('../middleware/multer-config')
 
 const router = express.Router();
 
 
 //récupération de toutes les sauces de l'api
-router.get('/:id', auth, stuffCrtl.findAllSauces);
+router.get('/', auth, stuffCrtl.findAllSauces);
 //récupération d'une sauce spécifique
 router.get('/:id', auth, stuffCrtl.findSauce);
 //création d'une nouvelle sauce avec (ou non) fichier 
@@ -18,7 +18,7 @@ router.put('/:id', auth, multer, stuffCrtl.modifySauce);
 //supression d'une sauce
 router.delete('/:id', auth, stuffCrtl.deleteSauce);
 //compteur de likes
-router.post('/', auth, stuffCrtl.likesCounter);
+router.post('/:id/like', auth, stuffCrtl.likesCounter);
 
 module.exports = router;
 

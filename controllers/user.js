@@ -1,22 +1,23 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
-const userModel = require('..models/user');
+const userModel = require('../models/user');
 
 // hachage du mot + ajout user à la BD
 exports.signUp = (req, res, next) => {
-    bcrypt.hash(req.body.password, 12)
-        .then(hash => {
-            const user = new userModel({
-                email: req.body.email,
-                password: hash
-            });
-            user.save()
-                .then(() => res.status(201).json({ message: 'Utilisateur créé!' }))
-                .catch(error => res.status(400).json({ error }));
-        })
-        .catch(error => res.status(400).json({ error }));
-};
+    bcrypt.hash(req.body.password, 12, function (err, hash) {
+        // Store hash in your password DB.
+        const user = new userModel({
+            email: req.body.email,
+            password: hash
+        });
+        user.save()
+            .then(() => res.status(201).json({ message: 'Utilisateur créé!' }))
+            .catch(error => res.status(400).json({ error, message: 'problème sauvegarde' }));
+    });
+
+    // .catch(error => res.status(400).json({ error,  message: 'problème connection' }));
+}
 
 // vérification identification user avec dans la res. id + token 
 exports.login = (req, res, next) => {

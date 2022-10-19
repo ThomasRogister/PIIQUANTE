@@ -1,11 +1,15 @@
-const thing = require('../models/thing');
-const sauce = require('../models/thing');
+
+const sauce = require('../models/sauce');
 const fs = require('fs');
 
 
 
 //récupération de toutes les sauces de l'api
+
 exports.findAllSauces = (req, res, next) => {
+    // sauce.find({}, function (err, sauces) {
+    //     console.log(sauces)
+    // });
     sauce.find()
         .then(things => res.status(200).json(things))
         .catch(error => res.status(400).json({ error }));
@@ -20,16 +24,16 @@ exports.findSauce = (req, res, next) => {
 
 //création d'une nouvelle sauce avec (ou non) fichier 
 exports.createSauce = (req, res, next) => {
-    const sauceObject = JSON.parse(req.body.thing);
+    const sauceObject = JSON.parse(req.body.sauce);
     delete sauceObject._id;
     delete sauceObject.userId;
     const thing = new sauce({
         ...sauceObject,
-        user: req.auth.userId,
-        imageUrl: `${req.protocol}://${req.get('host')}/image/${req.file.filename}`
+        userId: req.auth.userId,
+        imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
     });
     thing.save()
-        .then(() => { res.status(201).jason({ message: 'Sauce enregistrée!' }) })
+        .then(() => { res.status(201).json({ message: 'Sauce enregistrée!' }) })
         .catch(error => res.status(400).json({ error }))
 };
 
@@ -77,13 +81,17 @@ exports.likesCounter = (req, res, next) => {
             if (req.body.like == -1) {
                 sauce.dislikes++; //ajout dislike
                 sauce.usersDisliked.push(req.body.userId); //userId dans le tab des dislikes
-                sauce.save();
+                sauce.save()
+                    .then(() => { res.status(200).json({ message: 'like Ajouté!' }) })
+                    .catch(error => res.status(400).json({ error }));
             }
             //dislike
             if (req.body.like == 1) {
                 sauce.likes++; //ajout like  
                 sauce.usersliked.push(req.body.userId); //userId dans le tb des likes          
-                sauce.save();
+                sauce.save()
+                    .then(() => { res.status(200).json({ message: 'Dislike Ajouté!' }) })
+                    .catch(error => res.status(400).json({ error }));
             }
         })
 };

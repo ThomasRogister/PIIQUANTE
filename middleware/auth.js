@@ -9,7 +9,7 @@ module.exports = (req, res, next) => {
             userId: userId
         };
     } catch (error) {
-        res.status(401).json({ "problème d'authentification" });
-    }
-
+        res.status(401).json({ message: "problème d'authentification" });
+    };
+    next();
 }
