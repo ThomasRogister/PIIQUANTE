@@ -73,48 +73,46 @@ exports.deleteSauce = (req, res, next) => {
             res.status(400).json({ error });
         });
 };
-// conteur de likes
+// compteur de likes/dislikes
 exports.likesCounter = (req, res, next) => {
-    // cherche la bonne sauce à modifier
+    // findOne cherche la sauce correspondante
     sauce.findOne({ _id: req.params.id })
         .then((sauce) => {
-            // ajout du statut like/dislike dans une constante
             const like = req.body.like;
-            // si le user a déjà liké:
+            // si il y a déjà un like
             if (sauce.usersLiked.includes(req.body.userId)) {
-                // supprime son like
+                // on supprime le like
                 sauce.likes--;
-                // supprime son id de la base
+                // on supprime l'userId du tab dans la BD
                 const index = sauce.usersLiked.indexOf(req.body.userId);
                 sauce.usersLiked.splice(index, 1);
-                //sinon si le user vient  de liker:
+                //si il n'y a pas de like 
             } else if (like === 1) {
-                // rajoute un like dans la base
+                // rajoute un like 
                 sauce.likes++;
-                // rajoute l'id du user dans la base
+                // on rajoute l'userId dans le tab de la BD
                 sauce.usersLiked.push(req.body.userId);
             }
-            // si le user a déjà disliké:
+            // si il y a déjçà un dislike
             if (sauce.usersDisliked.includes(req.body.userId)) {
-                // supprime son dislike
+                // on supprime le dislike
                 sauce.dislikes--;
-                // supprime son id de la base
+                // on supprime l'userId dans le tab dans la BD
                 const index = sauce.usersDisliked.indexOf(req.body.userId);
                 sauce.usersDisliked.splice(index, 1);
-                //sinon si le user vient de disliker:
             } else if (like === -1) {
-                // rajoute un dislike dans la base
+                // on rajoute un dislike
                 sauce.dislikes++;
-                // rajoute l'id du user dans la base
+                // on rajoute l'userId dans le tab dans la BD
                 sauce.usersDisliked.push(req.body.userId);
             }
-            sauce
-                .save()
-                .then(() => res.status(200).json({ message: "Sauce liké/disliké !" }))
+            // on sauvegarde les changements de la sauce 
+            sauce.save()
+                .then(() => res.status(200).json({ message: "like/dislike sur la sauce effectué" }))
                 .catch((error) =>
                     res
                         .status(400)
-                        .json({ error: "Impossible de liké/disliké la Sauce !" })
+                        .json({ error })
                 );
         })
         .catch((error) => res.status(400).json({ error }));
