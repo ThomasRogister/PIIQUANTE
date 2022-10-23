@@ -109,11 +109,7 @@ exports.likesCounter = (req, res, next) => {
             // on sauvegarde les changements de la sauce 
             sauce.save()
                 .then(() => res.status(200).json({ message: "like/dislike sur la sauce effectué" }))
-                .catch((error) =>
-                    res
-                        .status(400)
-                        .json({ error })
-                );
+                .catch((error) => res.status(400).json({ error }));
         })
         .catch((error) => res.status(400).json({ error }));
 };
