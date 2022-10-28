@@ -5,12 +5,7 @@ const fs = require('fs');
 
 
 //récupération de toutes les sauces de l'api
-
 exports.findAllSauces = (req, res, next) => {
-    // sauce.find({}, function (err, sauces) {
-    //     console.log(sauces)
-    // });
-    console.log('toto');
     sauce.find()
         .then(things => res.status(200).json(things))
         .catch(error => res.status(400).json({ error }));
@@ -40,19 +35,45 @@ exports.createSauce = (req, res, next) => {
 
 //modification d'une sauce existante
 exports.modifySauce = (req, res, next) => {
-    const sauceObject = JSON.parse(req.body.thing);
-    delete sauceObject._id;
+    const sauceObject = req.file
+        ? {
+            // si on modifie en renvoyant une nouvelle image
+            ...JSON.parse(req.body.sauce),
+            imageUrl: `${req.protocol}://${req.get("host")}/images/${req.file.filename}`
+        } : {
+            // sinon on récupère les infos (image) dans le req.body
+            ...req.body
+        };
+    // l'utilisateur ne pourra modifier un produit qu'avec ses identifiant (userId)
     delete sauceObject._userId;
-    const thing = new sauce({
-        ...sauceObject,
-        userId: req.auth.userId,
-        imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
-    });
+    sauce.findById(req.params.id)
+        .then((sauceFound) => {
+            // si les userId ne correspondent pas, alors l'utilisateur n'est pas autorisé à modifié la sauce
+            if (sauceFound.userId != req.auth.userId) {
+                res.status(403).json({ message: "Non autorisé" });
+                //Sinon on efface l'ancienne image du serveur en si il y en a une nouvelle dans la requête
+            } else {
+                if (req.file) {
+                    const filename = sauceFound.imageUrl.split("/images/")[1];
+                    fs.unlink(`images/${filename}`, () => {
+                        // unlink efface l'ancienne et la remplace
+                        sauce.updateOne({ _id: req.params.id }, { ...sauceObject, _id: req.params.id })
+                            .then(() => res.status(200).json({ message: "Sauce modifiée!" }))
+                            .catch(error => res.status(401).json({ error }));
+                    });
+                }
+                else {
+                    sauce.updateOne({ _id: req.params.id }, { ...sauceObject, _id: req.params.id })
+                        .then(() => res.status(200).json({ message: "Sauce modifiée!" }))
+                        .catch(error => res.status(401).json({ error }));
+                }
+            }
+        })
+        .catch((error) => {
+            res.status(400).json({ error });
+        });
+}
 
-    thing.save()
-        .then(() => { res.status(201).json({ message: 'Objet enregistré !' }) })
-        .catch(error => { res.status(400).json({ error }) })
-};
 
 //supression d'une sauce
 exports.deleteSauce = (req, res, next) => {
@@ -81,32 +102,24 @@ exports.likesCounter = (req, res, next) => {
             const like = req.body.like;
             // si il y a déjà un like
             if (sauce.usersLiked.includes(req.body.userId)) {
-                // on supprime le like
                 sauce.likes--;
-                // on supprime l'userId du tab dans la BD
                 const index = sauce.usersLiked.indexOf(req.body.userId);
                 sauce.usersLiked.splice(index, 1);
                 //si il n'y a pas de like 
             } else if (like === 1) {
-                // rajoute un like 
                 sauce.likes++;
-                // on rajoute l'userId dans le tab de la BD
                 sauce.usersLiked.push(req.body.userId);
             }
-            // si il y a déjçà un dislike
+            // si il y a déjà un dislike
             if (sauce.usersDisliked.includes(req.body.userId)) {
-                // on supprime le dislike
                 sauce.dislikes--;
-                // on supprime l'userId dans le tab dans la BD
                 const index = sauce.usersDisliked.indexOf(req.body.userId);
                 sauce.usersDisliked.splice(index, 1);
+                // si il n'y a pas de de dislike
             } else if (like === -1) {
-                // on rajoute un dislike
                 sauce.dislikes++;
-                // on rajoute l'userId dans le tab dans la BD
                 sauce.usersDisliked.push(req.body.userId);
             }
-            // on sauvegarde les changements de la sauce 
             sauce.save()
                 .then(() => res.status(200).json({ message: "like/dislike effectué" }))
                 .catch((error) => res.status(400).json({ error }));
