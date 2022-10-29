@@ -36,33 +36,33 @@ exports.createSauce = (req, res, next) => {
 //modification d'une sauce existante
 exports.modifySauce = (req, res, next) => {
     const sauceObject = req.file
+        // ? - si on modifie en renvoyant une nouvelle image
         ? {
-            // si on modifie en renvoyant une nouvelle image
-            ...JSON.parse(req.body.sauce),
-            imageUrl: `${req.protocol}://${req.get("host")}/images/${req.file.filename}`
-        } : {
-            // sinon on récupère les infos (image) dans le req.body
-            ...req.body
-        };
-    // l'utilisateur ne pourra modifier un produit qu'avec ses identifiant (userId)
+            ...JSON.parse(req.body.sauce), imageUrl: `${req.protocol}://${req.get("host")}/images/${req.file.filename}`
+            // : - sinon on récupère les infos (image) dans le req.body
+        } : { ...req.body };
+
+    // l'utilisateur ne pourra modifier une sauce qu'avec ses identifiant (userId)
     delete sauceObject._userId;
     sauce.findById(req.params.id)
         .then((sauceFound) => {
             // si les userId ne correspondent pas, alors l'utilisateur n'est pas autorisé à modifié la sauce
             if (sauceFound.userId != req.auth.userId) {
                 res.status(403).json({ message: "Non autorisé" });
-                //Sinon on efface l'ancienne image du serveur en si il y en a une nouvelle dans la requête
+                //Sinon on efface l'ancienne image du serveur si il y en a une nouvelle dans la requête
             } else {
                 if (req.file) {
                     const filename = sauceFound.imageUrl.split("/images/")[1];
+                    // unlink retire l'image du serveur 
                     fs.unlink(`images/${filename}`, () => {
-                        // unlink efface l'ancienne et la remplace
+                        // updateOne met à jour l'image lors de la modification
                         sauce.updateOne({ _id: req.params.id }, { ...sauceObject, _id: req.params.id })
                             .then(() => res.status(200).json({ message: "Sauce modifiée!" }))
                             .catch(error => res.status(401).json({ error }));
                     });
                 }
                 else {
+                    // sinon, mise à jour de la sauce avec la même image
                     sauce.updateOne({ _id: req.params.id }, { ...sauceObject, _id: req.params.id })
                         .then(() => res.status(200).json({ message: "Sauce modifiée!" }))
                         .catch(error => res.status(401).json({ error }));
